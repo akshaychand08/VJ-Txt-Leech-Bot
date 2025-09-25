@@ -161,7 +161,7 @@ async def upload(bot: Client, m: Message):
              id =  url.split("/")[-2]
              url =  "https://d26g5bnklkwsh4.cloudfront.net/" + id + "/master.m3u8"
 
-            name1 = links[i][0].replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
+            name1 = links[i][0].replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https-", "").replace("http-", "").strip()
             name = f'{str(count).zfill(3)}) {name1[:60]}'
 
             if "youtu" in url:
@@ -181,27 +181,31 @@ async def upload(bot: Client, m: Message):
                 if "drive" in url:
                     try:
                         ka = await helper.download(url, name)
-                        copy = await bot.send_document(chat_id=m.chat.id,document=ka, caption=cc1)
+                        await bot.send_document(chat_id=m.chat.id,document=ka, caption=cc1)
                         count+=1
                         os.remove(ka)
                         time.sleep(1)
                     except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
-                        continue
+                        await asyncio.sleep(e.value)
+                        ka = await helper.download(url, name)
+                        await bot.send_document(chat_id=m.chat.id,document=ka, caption=cc1)
+                        count+=1
+                        os.remove(ka)
+                        time.sleep(1)
                 
                 elif ".pdf" in url:
                     try:
                         cmd = f'yt-dlp -o "{name}.pdf" "{url}"'
                         download_cmd = f"{cmd} -R 25 --fragment-retries 25"
                         os.system(download_cmd)
-                        copy = await bot.send_document(chat_id=m.chat.id, document=f'{name}.pdf', caption=cc1)
+                        await bot.send_document(chat_id=m.chat.id, document=f'{name}.pdf', caption=cc1)
                         count += 1
                         os.remove(f'{name}.pdf')
                     except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
-                        continue
+                        await asyncio.sleep(e.value)
+                        await bot.send_document(chat_id=m.chat.id, document=f'{name}.pdf', caption=cc1)
+                        count += 1
+                        os.remove(f'{name}.pdf')
                 else:
                     Show = f"**⥥ 🄳🄾🅆🄽🄻🄾🄰🄳🄸🄽🄶⬇️⬇️... »**\n\n**📝Name »** `{name}\n❄Quality » {raw_text2}`\n\n**🔗URL »** `{url}`"
                     prog = await m.reply_text(Show)
@@ -223,4 +227,17 @@ async def upload(bot: Client, m: Message):
     await m.reply_text("**𝔻ᴏɴᴇ 𝔹ᴏ𝕤𝕤😎**")
 
 
-bot.run()
+# This new section will handle the FloodWait error on startup
+if __name__ == "__main__":
+    print("Bot is starting...")
+    try:
+        bot.run()
+    except FloodWait as e:
+        print(f"Telegram FloodWait error. Need to wait for {e.value} seconds. Exiting now.")
+        # We exit here to allow the hosting platform's restart policy to take over.
+        # This prevents the script from holding the process for a long time.
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
+
