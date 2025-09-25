@@ -7,4 +7,5 @@ RUN apt-get update -y && apt-get upgrade -y \
 COPY . /app/
 WORKDIR /app/
 RUN pip3 install --no-cache-dir --upgrade --requirement requirements.txt
+# The Procfile will be used by Koyeb, so this CMD is just a fallback.
 CMD ["python3", "main.py"]
